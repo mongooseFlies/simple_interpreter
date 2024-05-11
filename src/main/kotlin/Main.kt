@@ -20,5 +20,8 @@ fun run(source: String) {
   val lexer = Lexer(source)
   val tokens = lexer.tokens()
   println(tokens)
+  val parser = Parser(tokens)
+  val ast = parser.parse()
+  println(ast)
 }
 

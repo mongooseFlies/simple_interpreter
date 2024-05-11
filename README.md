@@ -48,3 +48,26 @@ Very small dynamically-typed programming language
 * [ ] Classes
 * [ ] Methods
 * [ ] Inheritance
+
+## Grammar
+
+    expression |> literal    |
+                  binary     |
+                  unary      |
+                  grouping   |
+
+    literal   -> NUMBER | STRING | 'false' | 'true' | 'nil'
+    binary    -> expression operator expression
+    unary     -> operator expression
+    grouping  -> '('  expression ')'
+    operator  -> '==' | '>=' | '<' | '<=' | '+' | '-' | '*' | '/' | '!=' |
+
+    expression => equality
+    equality   => comparison ('==' | '!=') comparison
+    comparison => term ('+' | '-') term
+    term       => factor ('*' | '/') factor
+    factor     => primary
+    primary    => STRING | NUMBER | 'false' | 'true' | grouping
+    grouping     => '(' expression ')'
+
+    

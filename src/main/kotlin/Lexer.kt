@@ -43,7 +43,7 @@ data class Lexer(private val source: String) {
         val type = if (match('=')) EQ_EQ else EQ
         addToken(type)
       }
-      '\n', '\r' -> {
+      '\n', '\r', ';' -> {
         addToken(LINE)
         line++
       }
@@ -84,6 +84,7 @@ data class Lexer(private val source: String) {
       if (peek() == '\n') line++
       advance()
     }
+    addToken(STRING)
   }
 
   private fun peek() =
@@ -95,6 +96,7 @@ data class Lexer(private val source: String) {
   private fun number() {
     while (isDigit(peek())) advance()
     // NOTE: handle double values
+    // TODO: Introduce int and double instead of number
     if (match('.')) while (isDigit(peek())) advance()
     val value = source.slice(startInd ..< currentInd)
     addToken(NUMBER, value)
