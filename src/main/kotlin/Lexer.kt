@@ -1,6 +1,24 @@
 import TokenType.*
 
 data class Lexer(private val source: String) {
+
+  private val tokens = mutableListOf<Token>()
+  private var startInd = 0
+  private var currentInd = 0
+  private var line = 0
+  private val keywords =
+      mapOf(
+          "if" to IF,
+          "else" to ELSE,
+          "for" to FOR,
+          "while" to WHILE,
+          "true" to TRUE,
+          "false" to FALSE,
+          "let" to LET,
+          "nil" to NIL,
+          "print" to PRINT,
+      )
+
   fun tokens(): List<Token> {
     while (!isAtEnd()) {
       startInd = currentInd
@@ -21,11 +39,45 @@ data class Lexer(private val source: String) {
       '/' -> addToken(SLASH)
       '*' -> addToken(ASTERISK)
       '"' -> string()
-      '\n' -> line++
-      '\t', '\r', ' ' -> advance()
+      '=' -> {
+        val type = if (match('=')) EQ_EQ else EQ
+        addToken(type)
+      }
+      '\n', '\r' -> {
+        addToken(LINE)
+        line++
+      }
+      '\t', ' ' -> {}
       in '0'..'9' -> number()
+      in 'a'..'z', in 'A'..'Z' -> identifier()
     }
   }
+
+  private fun identifier() {
+    while (isAlphaNumeric(peek())) advance()
+    val text = source.slice(startInd..currentInd)
+    val keyword = keywords[text]
+    val type = keyword ?: IDENTIFIER
+    addToken(type)
+  }
+
+  private fun match(expected: Char): Boolean {
+    if (isAtEnd()) return false
+    val char = peek()
+    return when (char) {
+      expected -> {
+        advance()
+        true
+      }
+      else -> false
+    }
+  }
+
+  private fun isAlphaNumeric(char: Char) = isAlpha(char) || isDigit(char)
+
+  private fun isAlpha(char: Char) = char in 'a'..'z' || char in 'A'..'Z'
+
+  private fun isDigit(char: Char) = char in '0'..'9'
 
   private fun string() {
     while (peek() != '"' && !isAtEnd()) {
@@ -34,41 +86,32 @@ data class Lexer(private val source: String) {
     }
   }
 
-  private fun peek() = source[currentInd]
+  private fun peek() =
+      when {
+        isAtEnd() -> Char.MIN_VALUE
+        else -> source[currentInd]
+      }
 
   private fun number() {
-    // TODO: do this next to be able to parse math expression
+    while (isDigit(peek())) advance()
+    // NOTE: handle double values
+    if (match('.')) while (isDigit(peek())) advance()
+    val value = source.slice(startInd ..< currentInd)
+    addToken(NUMBER, value)
   }
 
   private fun addToken(type: TokenType) {
-    val text = source.slice(startInd..currentInd)
+    val text = source.slice(startInd ..< currentInd)
     val token = Token(type, text, null, line)
     tokens += token
   }
 
   private fun addToken(type: TokenType, value: Any?) {
-    val text = source.slice(startInd..currentInd)
+    val text = source.slice(startInd ..< currentInd)
     val token = Token(type, text, null, line)
     tokens += token
   }
-  private fun advance() = source[currentInd++]
+  private fun advance(): Char = source[currentInd++]
 
   private fun isAtEnd() = currentInd >= source.length
-
-  private val tokens = mutableListOf<Token>()
-  private var startInd = 0
-  private var currentInd = 0
-  private var line = 0
-  private val keywords =
-      mapOf(
-          "if" to IF,
-          "else" to ELSE,
-          "for" to FOR,
-          "while" to WHILE,
-          "true" to TRUE,
-          "false" to FALSE,
-          "let" to LET,
-          "nil" to NIL,
-          "print" to PRINT,
-      )
 }
