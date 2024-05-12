@@ -1,5 +1,4 @@
 import TokenType.*
-import kotlin.TODO
 
 class Parser(
     private val tokens: List<Token>,
@@ -56,9 +55,22 @@ class Parser(
         match(STRING) -> Literal(previous().text)
         match(NUMBER) -> Literal(previous().text!!.toDouble())
         match(NIL) -> Literal(null)
-        // TODO: Throw proper error
-        else -> throw RuntimeException()
+        match(LEFT_PAREN) -> {
+          val expr = expression()
+          expect(RIGHT_PAREN, "Expect right paren")
+          Grouping(expr)
+        }
+
+        // TODO: Throw proper error with line number info
+        else -> error("Compile error ...")
       }
+
+  private fun expect(type: TokenType, message: String) {
+    when (match(type)) {
+      false -> error(message)
+      else -> {}
+    }
+  }
 
   private fun match(type: TokenType): Boolean = if (check(type)) advance().let { true } else false
 
@@ -67,8 +79,6 @@ class Parser(
   private fun previous() = tokens[currentInd - 1]
 
   private fun advance() = tokens[currentInd++]
-
-  private fun grouping(): Expr = TODO()
 
   private fun isAtEnd() = currentInd >= tokens.size
 }

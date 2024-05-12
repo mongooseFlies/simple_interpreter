@@ -16,12 +16,21 @@ fun repl() {
 }
 
 fun run(source: String) {
-  println(source)
   val lexer = Lexer(source)
   val tokens = lexer.tokens()
-  println(tokens)
   val parser = Parser(tokens)
   val ast = parser.parse()
-  println(ast)
-}
+  /*
+   * NOTE: example of lisp like visitor
+   * expr => 1 * 2
+   * result => (ASTERISK 1 2)
+   *
+   * expr => 1 * (9 - 4)
+   * result -> (ASTERISK 1 (group (MINUS 9 4)))
+   * TODO: result => (* 1 (group (- 9 4))
+   */
 
+  val lispVisitor = AstVisitor()
+  val result = ast.visit(lispVisitor)
+  println(result)
+}
