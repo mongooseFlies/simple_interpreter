@@ -39,6 +39,14 @@ data class Lexer(private val source: String) {
       '/' -> addToken(SLASH)
       '*' -> addToken(ASTERISK)
       '"' -> string()
+      '<' -> {
+        val type = if (match('=')) LTE else LT
+        addToken(type)
+      }
+      '>' -> {
+        val type = if (match('=')) GTE else GT
+        addToken(type)
+      }
       '=' -> {
         val type = if (match('=')) EQ_EQ else EQ
         addToken(type)

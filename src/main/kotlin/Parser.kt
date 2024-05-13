@@ -12,7 +12,7 @@ class Parser(
 
   private fun equality(): Expr {
     var expr = comparison()
-    while (match(EQ_EQ) || match(NOT_EQ)) {
+    while (match(EQ_EQ, NOT_EQ)) {
       val operator = previous().type
       val right = comparison()
       expr = Binary(expr, operator, right)
@@ -22,7 +22,7 @@ class Parser(
 
   private fun comparison(): Expr {
     var expr = term()
-    while (match(LT) || match(LTE) || match(GT) || match(GTE)) {
+    while (match(LT, LTE, GT, GTE)) {
       val operator = previous().type
       val right = term()
       expr = Binary(expr, operator, right)
@@ -32,7 +32,7 @@ class Parser(
 
   private fun term(): Expr {
     var expr = factor()
-    while (match(PLUS) || match(MINUS)) {
+    while (match(PLUS, MINUS)) {
       val operator = previous().type
       val right = factor()
       expr = Binary(expr, operator, right)
@@ -42,7 +42,7 @@ class Parser(
 
   private fun factor(): Expr {
     var expr = primary()
-    while (match(ASTERISK) || match(SLASH)) {
+    while (match(ASTERISK, SLASH)) {
       val operator = previous().type
       val right = primary()
       expr = Binary(expr, operator, right)
@@ -72,7 +72,8 @@ class Parser(
     }
   }
 
-  private fun match(type: TokenType): Boolean = if (check(type)) advance().let { true } else false
+  private fun match(vararg types: TokenType): Boolean = types.any { check(it) }.ifTrue { advance() }
+  // types.any { check(it) }.apply { if (this) advance()}
 
   private fun check(type: TokenType) = tokens[currentInd].type == type
 
@@ -81,4 +82,11 @@ class Parser(
   private fun advance() = tokens[currentInd++]
 
   private fun isAtEnd() = currentInd >= tokens.size
+
+  private fun Boolean.ifTrue(block: () -> Unit): Boolean {
+    if (this) {
+      block()
+    }
+    return this
+  }
 }
