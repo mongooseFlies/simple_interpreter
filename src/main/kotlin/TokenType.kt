@@ -1,9 +1,11 @@
 enum class TokenType {
-  // operators
+  // Operators
   SLASH,
   PLUS,
   MINUS,
   ASTERISK,
+
+  // Comparison
   GT,
   GTE,
   LT,
@@ -11,16 +13,25 @@ enum class TokenType {
   EQ,
   EQ_EQ,
   NOT_EQ,
+
+  // grouping
   LEFT_PAREN,
   RIGHT_PAREN,
   LEFT_BRACE,
   RIGHT_BRACE,
+
+  // Punctuation
   DOT,
   COMMA,
+  BANG,
+
+  // primary types
   BOOL,
   STRING,
   NUMBER,
   IDENTIFIER,
+
+  // Keywords
   IF,
   ELSE,
   FALSE,
@@ -34,4 +45,3 @@ enum class TokenType {
   EOF,
   LINE,
 }
-

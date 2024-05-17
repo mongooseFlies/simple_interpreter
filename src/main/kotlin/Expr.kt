@@ -17,7 +17,7 @@ data class Binary(
 }
 
 data class Unary(
-    val operator: TokenType,
+    val operator: Token,
     val right: Expr,
 ) : Expr {
   override fun visit(visitor: Expr.Visitor) = visitor.visitUnaryExpr(this)

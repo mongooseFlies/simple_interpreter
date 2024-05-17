@@ -27,10 +27,11 @@ fun run(source: String) {
    *
    * expr => 1 * (9 - 4)
    * result -> (ASTERISK 1 (group (MINUS 9 4)))
-   * TODO: result => (* 1 (group (- 9 4))
    */
 
   val lispVisitor = AstVisitor()
-  val result = ast.visit(lispVisitor)
+  println(ast.visit(lispVisitor))
+  val interpreter = Interpreter()
+  val result = interpreter.eval(ast)
   println(result)
 }

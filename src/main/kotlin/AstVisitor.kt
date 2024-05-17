@@ -10,13 +10,13 @@ class AstVisitor : Expr.Visitor {
   }
 
   override fun visitUnaryExpr(unary: Unary): String {
-    val right = unary.right
-    return buildString { append("(${unary.operator} $right)") }
+    val right = unary.right.visit(this)
+    return buildString { append("(${unary.operator.type} $right)") }
   }
 
   override fun visitGroupingExpr(grouping: Grouping): String {
     val expr = grouping.expr.visit(this)
-    return buildString { append("(group $expr)") }
+    return buildString { append("(GROUP $expr)") }
   }
 
   override fun visitLiteralExpr(literal: Literal): String = buildString { append(literal.value) }

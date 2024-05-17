@@ -41,14 +41,21 @@ class Parser(
   }
 
   private fun factor(): Expr {
-    var expr = primary()
+    var expr = unary()
     while (match(ASTERISK, SLASH)) {
       val operator = previous().type
-      val right = primary()
+      val right = unary()
       expr = Binary(expr, operator, right)
     }
     return expr
   }
+
+  private fun unary(): Expr =
+      if (match(MINUS, BANG)) {
+        val operator = previous()
+        val right = unary()
+        Unary(operator, right)
+      } else primary()
 
   private fun primary(): Expr =
       when {
@@ -73,7 +80,6 @@ class Parser(
   }
 
   private fun match(vararg types: TokenType): Boolean = types.any { check(it) }.ifTrue { advance() }
-  // types.any { check(it) }.apply { if (this) advance()}
 
   private fun check(type: TokenType) = tokens[currentInd].type == type
 
