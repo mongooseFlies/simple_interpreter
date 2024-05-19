@@ -1,3 +1,8 @@
+import lang.Lexer
+import lang.Parser
+import lang.interpreter.AstVisitor
+import lang.interpreter.Interpreter
+
 fun main(args: Array<String>) {
   when (args.size) {
     0 -> repl()
@@ -26,7 +31,7 @@ fun run(source: String) {
    * result => (ASTERISK 1 2)
    *
    * expr => 1 * (9 - 4)
-   * result -> (ASTERISK 1 (group (MINUS 9 4)))
+   * result -> (ASTERISK 1 (GROUP (MINUS 9 4)))
    */
 
   val lispVisitor = AstVisitor()

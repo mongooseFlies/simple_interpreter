@@ -1,4 +1,7 @@
+package lang.model
+
 enum class TokenType {
+
   // Operators
   SLASH,
   PLUS,
@@ -14,7 +17,7 @@ enum class TokenType {
   EQ_EQ,
   NOT_EQ,
 
-  // grouping
+  // Grouping
   LEFT_PAREN,
   RIGHT_PAREN,
   LEFT_BRACE,
@@ -25,7 +28,7 @@ enum class TokenType {
   COMMA,
   BANG,
 
-  // primary types
+  // Primary types
   BOOL,
   STRING,
   NUMBER,
@@ -44,4 +47,5 @@ enum class TokenType {
   WHILE,
   EOF,
   LINE,
+
 }

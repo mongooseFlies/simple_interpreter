@@ -1,10 +1,17 @@
-import TokenType.*
+package lang.interpreter
+
+import lang.model.Binary
+import lang.model.Expr
+import lang.model.Grouping
+import lang.model.Literal
+import lang.model.TokenType.*
+import lang.model.Unary
 
 class Interpreter : Expr.Visitor {
 
   fun eval(expr: Expr) = expr.visit(this)
 
-  override fun visitBinaryExpr(binary: Binary): Any? {
+  override fun visitBinaryExpr(binary: Binary): Any {
     val left = eval(binary.left)
     val right = eval(binary.right)
     val operator = binary.operator
@@ -22,8 +29,11 @@ class Interpreter : Expr.Visitor {
         (left as Double) - (right as Double)
       }
       PLUS -> {
-        assertNumbers(left, right)
-        (left as Double) + (right as Double)
+        when {
+            left is Double && right is Double -> left + right
+            left is String && right is String -> "$left$right"
+            else -> error("can add only 2 strings or 2 numbers")
+        }
       }
       GTE -> {
         assertNumbers(left, right)
@@ -43,7 +53,6 @@ class Interpreter : Expr.Visitor {
       }
       EQ_EQ -> isEquals(left, right)
       NOT_EQ -> !isEquals(left, right)
-      // TODO: throw an error
       else -> {}
     }
   }
@@ -56,10 +65,10 @@ class Interpreter : Expr.Visitor {
   override fun visitUnaryExpr(unary: Unary): Any? {
     val expression = eval(unary.right)
     return when (unary.operator.type) {
-      BANG -> truthy(expression)
+      BANG -> isTruthy(expression)
       MINUS -> {
         if (expression is Double) return -1 * expression
-        else error("Expect a number after ${unary.operator}")
+        else error("Expect a number after ${unary.operator.type}")
       }
       else -> {}
     }
@@ -75,7 +84,7 @@ class Interpreter : Expr.Visitor {
     }
   }
 
-  private fun truthy(obj: Any?) =
+  private fun isTruthy(obj: Any?) =
       when (obj) {
         is Boolean -> obj
         null -> false

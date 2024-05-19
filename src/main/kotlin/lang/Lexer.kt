@@ -1,4 +1,8 @@
-import TokenType.*
+package lang
+
+import lang.model.Token
+import lang.model.TokenType
+import lang.model.TokenType.*
 
 data class Lexer(private val source: String) {
 

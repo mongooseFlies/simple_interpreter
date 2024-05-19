@@ -1,7 +1,16 @@
-import TokenType.*
+package lang
+
+import lang.model.Binary
+import lang.model.Expr
+import lang.model.Grouping
+import lang.model.Literal
+import lang.model.Token
+import lang.model.TokenType
+import lang.model.TokenType.*
+import lang.model.Unary
 
 class Parser(
-    private val tokens: List<Token>,
+  private val tokens: List<Token>,
 ) {
 
   private var currentInd: Int = 0

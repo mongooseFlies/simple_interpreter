@@ -1,3 +1,5 @@
+package lang.model
+
 interface Expr {
   interface Visitor {
     fun visitBinaryExpr(binary: Binary): Any?
