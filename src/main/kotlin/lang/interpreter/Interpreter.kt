@@ -1,15 +1,14 @@
 package lang.interpreter
 
-import lang.model.Binary
-import lang.model.Expr
-import lang.model.Grouping
-import lang.model.Literal
+import lang.model.*
 import lang.model.TokenType.*
-import lang.model.Unary
 
-class Interpreter : Expr.Visitor {
+class Interpreter(private val environment: Environment = Environment()) :
+    Expr.Visitor, Stmt.Visitor {
 
-  fun eval(expr: Expr) = expr.visit(this)
+  fun interpret(statements: List<Stmt>) = statements.forEach { it.visit(this) }
+
+  private fun eval(expr: Expr) = expr.visit(this)
 
   override fun visitBinaryExpr(binary: Binary): Any {
     val left = eval(binary.left)
@@ -30,9 +29,9 @@ class Interpreter : Expr.Visitor {
       }
       PLUS -> {
         when {
-            left is Double && right is Double -> left + right
-            left is String && right is String -> "$left$right"
-            else -> error("can add only 2 strings or 2 numbers")
+          left is Double && right is Double -> left + right
+          left is String && right is String -> "$left$right"
+          else -> error("can add only 2 strings or 2 numbers")
         }
       }
       GTE -> {
@@ -78,6 +77,8 @@ class Interpreter : Expr.Visitor {
 
   override fun visitLiteralExpr(literal: Literal) = literal.value
 
+  override fun visitVarExpr(expr: Var) = environment.get(expr.token.text)
+
   private fun assertNumbers(left: Any?, right: Any?) {
     if (left !is Double || right !is Double) {
       throw RuntimeException("Expect number")
@@ -91,4 +92,16 @@ class Interpreter : Expr.Visitor {
         // NOTE: anything else is true if not null
         else -> true
       }
+
+  override fun visitExpressionStmt(stmt: Expression) = eval(stmt.expr)
+
+  override fun visitPrintStmt(stmt: Print) = println(eval(stmt.expr))
+
+  override fun visitVarStmt(stmt: Variable) {
+    var initializer: Any? = null
+    if (stmt.initializer != null) {
+      initializer = eval(stmt.initializer)
+    }
+    environment.define(stmt.name.text, initializer)
+  }
 }

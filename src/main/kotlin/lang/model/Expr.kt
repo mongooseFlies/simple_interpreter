@@ -6,6 +6,7 @@ interface Expr {
     fun visitUnaryExpr(unary: Unary): Any?
     fun visitGroupingExpr(grouping: Grouping): Any?
     fun visitLiteralExpr(literal: Literal): Any?
+    fun visitVarExpr(expr: Var): Any?
   }
   fun visit(visitor: Visitor): Any?
 }
@@ -31,4 +32,8 @@ data class Literal(val value: Any?) : Expr {
 
 data class Grouping(val expr: Expr) : Expr {
   override fun visit(visitor: Expr.Visitor) = visitor.visitGroupingExpr(this)
+}
+
+data class Var(val token: Token): Expr {
+    override fun visit(visitor: Expr.Visitor) = visitor.visitVarExpr(this)
 }

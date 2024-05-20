@@ -62,12 +62,13 @@ data class Lexer(private val source: String) {
       '\t', ' ' -> {}
       in '0'..'9' -> number()
       in 'a'..'z', in 'A'..'Z' -> identifier()
+      //Char.MIN_VALUE -> addToken(EOF)
     }
   }
 
   private fun identifier() {
     while (isAlphaNumeric(peek())) advance()
-    val text = source.slice(startInd..currentInd)
+    val text = source.slice(startInd ..< currentInd)
     val keyword = keywords[text]
     val type = keyword ?: IDENTIFIER
     addToken(type)

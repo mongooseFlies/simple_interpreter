@@ -1,14 +1,10 @@
 package lang.interpreter
 
-import lang.model.Binary
-import lang.model.Expr
-import lang.model.Grouping
-import lang.model.Literal
-import lang.model.Unary
 import kotlin.text.buildString
+import lang.model.*
 
 // NOTE: Lisp like printer
-class AstVisitor : Expr.Visitor {
+class AstVisitor : Expr.Visitor, Stmt.Visitor {
 
   override fun visitBinaryExpr(binary: Binary): String {
     val left = binary.left.visit(this)
@@ -27,4 +23,18 @@ class AstVisitor : Expr.Visitor {
   }
 
   override fun visitLiteralExpr(literal: Literal): String = buildString { append(literal.value) }
+
+  override fun visitVarExpr(expr: Var) = buildString { append(expr.token.text) }
+
+  override fun visitExpressionStmt(stmt: Expression) {
+    stmt.expr.visit(this)
+  }
+
+  override fun visitPrintStmt(stmt: Print) = buildString {
+    append("(PRINT ${stmt.expr.visit(this@AstVisitor)})")
+  }
+
+  override fun visitVarStmt(stmt: Variable) = buildString {
+    append("(VAR ${stmt.name.text} ${stmt.initializer})})")
+  }
 }

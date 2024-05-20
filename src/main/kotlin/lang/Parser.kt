@@ -1,21 +1,49 @@
 package lang
 
-import lang.model.Binary
-import lang.model.Expr
-import lang.model.Grouping
-import lang.model.Literal
-import lang.model.Token
-import lang.model.TokenType
+import lang.Utils.ifTrue
+import lang.model.*
 import lang.model.TokenType.*
-import lang.model.Unary
 
 class Parser(
-  private val tokens: List<Token>,
+    private val tokens: List<Token>,
 ) {
 
   private var currentInd: Int = 0
 
-  fun parse(): Expr = expression()
+  fun parse(): List<Stmt> {
+    val statements = mutableListOf<Stmt>()
+    while (!isAtEnd()) {
+      statements += declaration()
+    }
+    return statements
+  }
+
+  private fun declaration(): Stmt =
+      when {
+        match(LET) -> varDeclaration()
+        else -> statement()
+      }
+
+  private fun varDeclaration(): Stmt {
+    val name = advance()
+    var expr: Expr? = null
+    if (match(EQ)) {
+      expr = expression()
+    }
+    expect("Expect new line", LINE, EOF)
+    return Variable(name, expr)
+  }
+
+  private fun statement(): Stmt =
+      when {
+        match(PRINT) -> {
+          val expression = expression()
+          val printStmt = Print(expression)
+          expect("Expect new line", LINE, EOF)
+          printStmt
+        }
+        else -> Expression(expression())
+      }
 
   private fun expression() = equality()
 
@@ -69,20 +97,20 @@ class Parser(
   private fun primary(): Expr =
       when {
         match(STRING) -> Literal(previous().text)
-        match(NUMBER) -> Literal(previous().text!!.toDouble())
+        match(NUMBER) -> Literal(previous().text.toDouble())
         match(NIL) -> Literal(null)
         match(LEFT_PAREN) -> {
           val expr = expression()
-          expect(RIGHT_PAREN, "Expect right paren")
+          expect("Expect right paren", RIGHT_PAREN)
           Grouping(expr)
         }
-
+        match(IDENTIFIER) -> Var(previous())
         // TODO: Throw proper error with line number info
         else -> error("Compile error ...")
       }
 
-  private fun expect(type: TokenType, message: String) {
-    when (match(type)) {
+  private fun expect(message: String, vararg types: TokenType) {
+    when (match(*types)) {
       false -> error(message)
       else -> {}
     }
@@ -97,11 +125,4 @@ class Parser(
   private fun advance() = tokens[currentInd++]
 
   private fun isAtEnd() = currentInd >= tokens.size
-
-  private fun Boolean.ifTrue(block: () -> Unit): Boolean {
-    if (this) {
-      block()
-    }
-    return this
-  }
 }
