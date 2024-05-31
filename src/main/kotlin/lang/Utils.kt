@@ -8,4 +8,3 @@ object Utils {
     return this
   }
 }
-

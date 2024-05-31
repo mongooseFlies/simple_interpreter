@@ -37,4 +37,18 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
   override fun visitVarStmt(stmt: Variable) = buildString {
     append("(VAR ${stmt.name.text} ${stmt.initializer})})")
   }
+
+  override fun visitBlockStmt(block: Block) = buildString {
+    append(("(BLOCK "))
+    for (stmt in block.statements) append(stmt.visit(this@AstVisitor))
+    append(")")
+  }
+
+  override fun visitFnStmt(fn: Fn) = buildString {
+    append("(FN -> ${fn.name.text}(PARAMS ")
+    for (param in fn.params) append("${param.text} ")
+    append(")")
+    for (stmt in fn.body) stmt.visit(this@AstVisitor)
+    append(")")
+  }
 }

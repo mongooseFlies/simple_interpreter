@@ -104,4 +104,12 @@ class Interpreter(private val environment: Environment = Environment()) :
     }
     environment.define(stmt.name.text, initializer)
   }
+
+  override fun visitBlockStmt(block: Block): Any? {
+    TODO("Not yet implemented")
+  }
+
+  override fun visitFnStmt(fn: Fn): Any? {
+    TODO("implement Runtime representation of Fn")
+  }
 }

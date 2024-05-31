@@ -1,7 +1,6 @@
 package lang.model
 
 enum class TokenType {
-
   // Operators
   SLASH,
   PLUS,
@@ -47,5 +46,4 @@ enum class TokenType {
   WHILE,
   EOF,
   LINE,
-
 }

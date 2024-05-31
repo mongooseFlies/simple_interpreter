@@ -34,6 +34,6 @@ data class Grouping(val expr: Expr) : Expr {
   override fun visit(visitor: Expr.Visitor) = visitor.visitGroupingExpr(this)
 }
 
-data class Var(val token: Token): Expr {
-    override fun visit(visitor: Expr.Visitor) = visitor.visitVarExpr(this)
+data class Var(val token: Token) : Expr {
+  override fun visit(visitor: Expr.Visitor) = visitor.visitVarExpr(this)
 }

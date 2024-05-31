@@ -5,7 +5,6 @@ import lang.model.TokenType
 import lang.model.TokenType.*
 
 data class Lexer(private val source: String) {
-
   private val tokens = mutableListOf<Token>()
   private var startInd = 0
   private var currentInd = 0
@@ -21,6 +20,7 @@ data class Lexer(private val source: String) {
           "let" to LET,
           "nil" to NIL,
           "print" to PRINT,
+          "fn" to FN,
       )
 
   fun tokens(): List<Token> {
@@ -62,7 +62,7 @@ data class Lexer(private val source: String) {
       '\t', ' ' -> {}
       in '0'..'9' -> number()
       in 'a'..'z', in 'A'..'Z' -> identifier()
-      //Char.MIN_VALUE -> addToken(EOF)
+    // Char.MIN_VALUE -> addToken(EOF)
     }
   }
 
@@ -121,11 +121,15 @@ data class Lexer(private val source: String) {
     tokens += token
   }
 
-  private fun addToken(type: TokenType, value: Any?) {
+  private fun addToken(
+      type: TokenType,
+      value: Any?,
+  ) {
     val text = source.slice(startInd ..< currentInd)
     val token = Token(type, text, null, line)
     tokens += token
   }
+
   private fun advance(): Char = source[currentInd++]
 
   private fun isAtEnd() = currentInd >= source.length

@@ -1,5 +1,6 @@
 package lang
 
+import kotlin.collections.mutableListOf
 import lang.Utils.ifTrue
 import lang.model.*
 import lang.model.TokenType.*
@@ -21,8 +22,25 @@ class Parser(
   private fun declaration(): Stmt =
       when {
         match(LET) -> varDeclaration()
+        match(FN) -> function()
         else -> statement()
       }
+
+  private fun function(): Stmt {
+    val name = consume("expect function name", IDENTIFIER)
+    expect("expect '(' after function name", LEFT_PAREN)
+    val params = mutableListOf<Token>()
+    if (!check(RIGHT_PAREN)) {
+      do {
+        params += consume("expect param", IDENTIFIER)
+      } while (match(COMMA))
+    }
+    expect("expect ')' after params", RIGHT_PAREN)
+    expect("expect '{'", RIGHT_BRACE)
+
+    val funBody = block()
+    return Fn(name, params, funBody)
+  }
 
   private fun varDeclaration(): Stmt {
     val name = advance()
@@ -42,8 +60,18 @@ class Parser(
           expect("Expect new line", LINE, EOF)
           printStmt
         }
+        match(LEFT_BRACE) -> Block(block())
         else -> Expression(expression())
       }
+
+  private fun block(): List<Stmt> {
+    val statements = mutableListOf<Stmt>()
+    while (!check(RIGHT_BRACE)) {
+      statements += declaration()
+    }
+    expect("Expect '}'", RIGHT_BRACE)
+    return statements
+  }
 
   private fun expression() = equality()
 
@@ -106,7 +134,7 @@ class Parser(
         }
         match(IDENTIFIER) -> Var(previous())
         // TODO: Throw proper error with line number info
-        else -> error("Compile error ...")
+        else -> throw ParseException("Compile error ...", tokens[currentInd])
       }
 
   private fun expect(message: String, vararg types: TokenType) {
@@ -114,6 +142,12 @@ class Parser(
       false -> error(message)
       else -> {}
     }
+  }
+
+  private fun consume(message: String, vararg types: TokenType): Token {
+    val value = tokens[currentInd]
+    expect(message, *types)
+    return value
   }
 
   private fun match(vararg types: TokenType): Boolean = types.any { check(it) }.ifTrue { advance() }
@@ -126,3 +160,5 @@ class Parser(
 
   private fun isAtEnd() = currentInd >= tokens.size
 }
+
+data class ParseException(override val message: String, val token: Token) : RuntimeException()

@@ -1,13 +1,14 @@
+import java.io.File
 import lang.Lexer
 import lang.Parser
 import lang.interpreter.AstVisitor
 import lang.interpreter.Interpreter
-import java.io.File
 
 fun main(args: Array<String>) {
   when (args.size) {
     0 -> repl()
-    else -> source(args[1])
+    else -> source(args[0])
+  // TODO: add help ?
   }
 }
 
@@ -16,7 +17,8 @@ private fun source(filename: String) {
     val file = File(filename)
     val source = file.readText()
     run(source)
-  } catch (_: Exception) {
+  } catch (ex: Exception) {
+    println(ex.message)
   }
 }
 
