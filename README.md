@@ -30,7 +30,19 @@ Very small dynamically-typed programming language
 
 ### **Example:**
 ```
+let a = 22
 
+fn add(a, b) {
+  print a + b
+}
+
+add(3, 4)
+
+print "HI"
+print 3 * 4
+
+ //TODO: if statement
+ //TODO: while statement
 ```
 
 ### Supported Language Features

@@ -4,6 +4,7 @@ import kotlin.collections.mutableListOf
 import lang.Utils.ifTrue
 import lang.model.*
 import lang.model.TokenType.*
+import error as err
 
 class Parser(
     private val tokens: List<Token>,
@@ -11,20 +12,25 @@ class Parser(
 
   private var currentInd: Int = 0
 
-  fun parse(): List<Stmt> {
+  fun parse() = statements()
+
+  private fun statements() : List<Stmt> {
     val statements = mutableListOf<Stmt>()
     while (!isAtEnd()) {
+      skipNewLines()
+      if (isAtEnd()) break
       statements += declaration()
     }
     return statements
   }
 
-  private fun declaration(): Stmt =
-      when {
-        match(LET) -> varDeclaration()
-        match(FN) -> function()
-        else -> statement()
-      }
+  private fun declaration(): Stmt {
+    return when {
+      match(LET) -> varDeclaration()
+      match(FN) -> function()
+      else -> statement()
+    }
+  }
 
   private fun function(): Stmt {
     val name = consume("expect function name", IDENTIFIER)
@@ -36,7 +42,7 @@ class Parser(
       } while (match(COMMA))
     }
     expect("expect ')' after params", RIGHT_PAREN)
-    expect("expect '{'", RIGHT_BRACE)
+    expect("expect '{'", LEFT_BRACE)
 
     val funBody = block()
     return Fn(name, params, funBody)
@@ -67,6 +73,7 @@ class Parser(
   private fun block(): List<Stmt> {
     val statements = mutableListOf<Stmt>()
     while (!check(RIGHT_BRACE)) {
+      skipNewLines()
       statements += declaration()
     }
     expect("Expect '}'", RIGHT_BRACE)
@@ -120,7 +127,22 @@ class Parser(
         val operator = previous()
         val right = unary()
         Unary(operator, right)
-      } else primary()
+      } else call()
+
+  private fun call(): Expr {
+    var expr = primary()
+    if (match(LEFT_PAREN)) {
+      val arguments = mutableListOf<Expr>()
+        do {
+          if (!check(RIGHT_PAREN)) {
+            arguments += expression()
+          }
+        } while (match(COMMA))
+      expect("Expect ')' after arguments", RIGHT_PAREN)
+      expr = Call(expr, arguments)
+    }
+    return expr
+  }
 
   private fun primary(): Expr =
       when {
@@ -134,31 +156,42 @@ class Parser(
         }
         match(IDENTIFIER) -> Var(previous())
         // TODO: Throw proper error with line number info
-        else -> throw ParseException("Compile error ...", tokens[currentInd])
+        else -> throw error("Compile error ...", tokens[currentInd])
       }
 
   private fun expect(message: String, vararg types: TokenType) {
     when (match(*types)) {
-      false -> error(message)
+      false -> error(message, tokens[currentInd])
       else -> {}
     }
   }
 
-  private fun consume(message: String, vararg types: TokenType): Token {
-    val value = tokens[currentInd]
-    expect(message, *types)
-    return value
+  private fun error(message: String, token: Token): ParseException {
+    err(token, message)
+    return ParseException()
   }
 
-  private fun match(vararg types: TokenType): Boolean = types.any { check(it) }.ifTrue { advance() }
+  private fun consume(message: String, type: TokenType): Token {
+    if (check(type)) return advance()
+    throw error(message, peek())
+  }
 
-  private fun check(type: TokenType) = tokens[currentInd].type == type
+  private fun peek() = tokens[currentInd]
+
+  private fun match(vararg types: TokenType): Boolean =
+    types.any { check(it) }.ifTrue { advance() }
+
+  private fun check(type: TokenType) = peek().type == type
 
   private fun previous() = tokens[currentInd - 1]
 
   private fun advance() = tokens[currentInd++]
 
-  private fun isAtEnd() = currentInd >= tokens.size
+  private fun isAtEnd() = currentInd >= tokens.size || tokens[currentInd].type == EOF
+
+  private fun skipNewLines() {
+    while (check(LINE)) advance()
+  }
 }
 
-data class ParseException(override val message: String, val token: Token) : RuntimeException()
+class ParseException : RuntimeException()

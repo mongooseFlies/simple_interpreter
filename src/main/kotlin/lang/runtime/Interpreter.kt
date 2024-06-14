@@ -1,9 +1,9 @@
-package lang.interpreter
+package lang.runtime
 
 import lang.model.*
 import lang.model.TokenType.*
 
-class Interpreter(private val environment: Environment = Environment()) :
+class Interpreter(private var environment: Environment = Environment()) :
     Expr.Visitor, Stmt.Visitor {
 
   fun interpret(statements: List<Stmt>) = statements.forEach { it.visit(this) }
@@ -27,13 +27,12 @@ class Interpreter(private val environment: Environment = Environment()) :
         assertNumbers(left, right)
         (left as Double) - (right as Double)
       }
-      PLUS -> {
-        when {
-          left is Double && right is Double -> left + right
-          left is String && right is String -> "$left$right"
-          else -> error("can add only 2 strings or 2 numbers")
-        }
-      }
+      PLUS ->
+          when {
+            left is Double && right is Double -> left + right
+            left is String && right is String -> "$left$right"
+            else -> error("can add only strings or numbers")
+          }
       GTE -> {
         assertNumbers(left, right)
         (left as Double) >= (right as Double)
@@ -61,7 +60,7 @@ class Interpreter(private val environment: Environment = Environment()) :
     return left?.equals(right) ?: false
   }
 
-  override fun visitUnaryExpr(unary: Unary): Any? {
+  override fun visitUnaryExpr(unary: Unary): Any {
     val expression = eval(unary.right)
     return when (unary.operator.type) {
       BANG -> isTruthy(expression)
@@ -75,14 +74,24 @@ class Interpreter(private val environment: Environment = Environment()) :
 
   override fun visitGroupingExpr(grouping: Grouping): Any? = eval(grouping.expr)
 
-  override fun visitLiteralExpr(literal: Literal) = literal.value
+  override fun visitLiteralExpr(literal: Literal): Any? = literal.value
 
   override fun visitVarExpr(expr: Var) = environment.get(expr.token.text)
 
-  private fun assertNumbers(left: Any?, right: Any?) {
-    if (left !is Double || right !is Double) {
-      throw RuntimeException("Expect number")
+  override fun visitCallExpr(expr: Call): Any? {
+    val callee = eval(expr.callee)
+    if (callee !is Callable) {
+      throw RuntimeError("expr is not callable")
     }
+    val arguments = mutableListOf<Any?>()
+    for (argument in expr.arguments)
+      arguments += eval(argument)
+    return callee.call(this, arguments)
+  }
+
+  private fun assertNumbers(left: Any?, right: Any?) {
+    if (left !is Double || right !is Double)
+      throw RuntimeError("Expect number")
   }
 
   private fun isTruthy(obj: Any?) =
@@ -105,11 +114,25 @@ class Interpreter(private val environment: Environment = Environment()) :
     environment.define(stmt.name.text, initializer)
   }
 
-  override fun visitBlockStmt(block: Block): Any? {
-    TODO("Not yet implemented")
+  override fun visitBlockStmt(block: Block) {
+    executeBlockStmt(block.statements, environment)
   }
 
-  override fun visitFnStmt(fn: Fn): Any? {
-    TODO("implement Runtime representation of Fn")
+  fun executeBlockStmt(body: List<Stmt>, environment: Environment) {
+    // NOTE: take env snapshot
+    val previous = this.environment
+    try {
+      for (stmt in body) stmt.visit(this)
+    } finally {
+      // NOTE: restore env after function call exits
+      this.environment = previous
+    }
+  }
+
+  override fun visitFnStmt(fn: Fn) {
+    val function = Function(fn, environment)
+    environment.define(fn.name.text, function)
   }
 }
+
+data class RuntimeError(override val message: String) : RuntimeException(message)

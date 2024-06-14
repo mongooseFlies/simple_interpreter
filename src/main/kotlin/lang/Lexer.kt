@@ -1,5 +1,6 @@
 package lang
 
+import error
 import lang.model.Token
 import lang.model.TokenType
 import lang.model.TokenType.*
@@ -40,7 +41,11 @@ data class Lexer(private val source: String) {
       '}' -> addToken(RIGHT_BRACE)
       '+' -> addToken(PLUS)
       '-' -> addToken(MINUS)
-      '/' -> addToken(SLASH)
+      '/' ->
+        if (match('/'))
+          while (!isAtEnd() && peek() != '\n')
+            advance()
+        else addToken(SLASH)
       '*' -> addToken(ASTERISK)
       '"' -> string()
       '<' -> {
@@ -55,7 +60,9 @@ data class Lexer(private val source: String) {
         val type = if (match('=')) EQ_EQ else EQ
         addToken(type)
       }
+      ',' -> addToken(COMMA)
       '\n', '\r', ';' -> {
+//        if (tokens.isNotEmpty() && tokens[currentInd - 1].type != LINE)
         addToken(LINE)
         line++
       }
@@ -93,11 +100,22 @@ data class Lexer(private val source: String) {
   private fun isDigit(char: Char) = char in '0'..'9'
 
   private fun string() {
+
     while (peek() != '"' && !isAtEnd()) {
       if (peek() == '\n') line++
       advance()
     }
-    addToken(STRING)
+
+    if (isAtEnd()) {
+      error(line, "unterminated string")
+      return
+    }
+
+    // consume "
+    advance()
+
+    val text = source.substring(startInd + 1, currentInd - 1)
+    addToken(STRING, text)
   }
 
   private fun peek() =
@@ -126,7 +144,7 @@ data class Lexer(private val source: String) {
       value: Any?,
   ) {
     val text = source.slice(startInd ..< currentInd)
-    val token = Token(type, text, null, line)
+    val token = Token(type, text, value, line)
     tokens += token
   }
 

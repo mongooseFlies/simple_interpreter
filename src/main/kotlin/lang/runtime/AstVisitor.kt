@@ -1,11 +1,9 @@
-package lang.interpreter
+package lang.runtime
 
 import kotlin.text.buildString
 import lang.model.*
 
-// NOTE: Lisp like printer
 class AstVisitor : Expr.Visitor, Stmt.Visitor {
-
   override fun visitBinaryExpr(binary: Binary): String {
     val left = binary.left.visit(this)
     val right = binary.right.visit(this)
@@ -25,6 +23,23 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
   override fun visitLiteralExpr(literal: Literal): String = buildString { append(literal.value) }
 
   override fun visitVarExpr(expr: Var) = buildString { append(expr.token.text) }
+
+  override fun visitCallExpr(expr: Call) = buildString {
+    append("(CALL ${expr.callee.visit(this@AstVisitor)} ")
+    if (expr.arguments.isNotEmpty()) {
+      append("(PARAMS (")
+      val argumentsLen = expr.arguments.size
+      for (index in expr.arguments.indices) {
+        append("${expr.arguments[index]}")
+        if (index < argumentsLen - 1)
+          append(", ")
+        else
+          append(")")
+      }
+      append(")")
+    }
+    append(")")
+  }
 
   override fun visitExpressionStmt(stmt: Expression) {
     stmt.expr.visit(this)
@@ -46,7 +61,13 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
 
   override fun visitFnStmt(fn: Fn) = buildString {
     append("(FN -> ${fn.name.text}(PARAMS ")
-    for (param in fn.params) append("${param.text} ")
+    for (index in fn.params.indices) {
+      append(fn.params[index].text)
+      if (index < fn.params.size - 1)
+        append(", ")
+      else
+        append(")")
+    }
     append(")")
     for (stmt in fn.body) stmt.visit(this@AstVisitor)
     append(")")
