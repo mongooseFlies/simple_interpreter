@@ -55,7 +55,7 @@ print 3 * 4
 ## TODO list
 
 * [ ] Control flow
-* [ ] Functions with parameters
+* [x] Functions with parameters
 * [ ] Closures
 * [ ] Classes
 * [ ] Methods
