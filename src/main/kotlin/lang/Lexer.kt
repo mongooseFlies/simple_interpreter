@@ -60,6 +60,10 @@ data class Lexer(private val source: String) {
         val type = if (match('=')) EQ_EQ else EQ
         addToken(type)
       }
+      '!' -> {
+        val type = if (match('=')) NOT_EQ else BANG
+        addToken(type)
+      }
       ',' -> addToken(COMMA)
       '\n', '\r', ';' -> {
 //        if (tokens.isNotEmpty() && tokens[currentInd - 1].type != LINE)

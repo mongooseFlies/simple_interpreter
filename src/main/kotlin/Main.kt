@@ -2,7 +2,7 @@ import lang.Lexer
 import lang.Parser
 import lang.model.Token
 import lang.model.TokenType
-import lang.runtime.AstVisitor
+import lang.runtime.Ast
 import lang.runtime.Interpreter
 import java.io.File
 
@@ -62,7 +62,7 @@ fun run(source: String) {
    * result -> (ASTERISK 1 (GROUP (MINUS 9 4)))
    */
     if (!hadError) {
-        val lispVisitor = AstVisitor()
+        val lispVisitor = Ast()
         statements.forEach { println(it.visit(lispVisitor)) }
         val interpreter = Interpreter()
         interpreter.interpret(statements)

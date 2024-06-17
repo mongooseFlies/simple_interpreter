@@ -11,6 +11,8 @@ interface Stmt {
         fun visitBlockStmt(block: Block): Any?
 
         fun visitFnStmt(fn: Fn): Any?
+
+        fun visitIfStmt(ifStmt: If): Any?
     }
 
     fun visit(visitor: Visitor): Any?
@@ -47,4 +49,12 @@ data class Fn(
     val body: List<Stmt>,
 ) : Stmt {
     override fun visit(visitor: Stmt.Visitor) = visitor.visitFnStmt(this)
+}
+
+data class If(
+    val condition: Expr,
+    val then: List<Stmt>,
+    val elseBranch: List<Stmt>?,
+) : Stmt {
+    override fun visit(visitor: Stmt.Visitor) = visitor.visitIfStmt(this)
 }

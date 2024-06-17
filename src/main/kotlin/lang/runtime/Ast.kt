@@ -3,7 +3,7 @@ package lang.runtime
 import kotlin.text.buildString
 import lang.model.*
 
-class AstVisitor : Expr.Visitor, Stmt.Visitor {
+class Ast : Expr.Visitor, Stmt.Visitor {
   override fun visitBinaryExpr(binary: Binary): String {
     val left = binary.left.visit(this)
     val right = binary.right.visit(this)
@@ -25,7 +25,7 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
   override fun visitVarExpr(expr: Var) = buildString { append(expr.token.text) }
 
   override fun visitCallExpr(expr: Call) = buildString {
-    append("(CALL ${expr.callee.visit(this@AstVisitor)} ")
+    append("(CALL ${expr.callee.visit(this@Ast)} ")
     if (expr.arguments.isNotEmpty()) {
       append("(PARAMS (")
       val argumentsLen = expr.arguments.size
@@ -46,7 +46,7 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
   }
 
   override fun visitPrintStmt(stmt: Print) = buildString {
-    append("(PRINT ${stmt.expr.visit(this@AstVisitor)})")
+    append("(PRINT ${stmt.expr.visit(this@Ast)})")
   }
 
   override fun visitVarStmt(stmt: Variable) = buildString {
@@ -55,7 +55,7 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
 
   override fun visitBlockStmt(block: Block) = buildString {
     append(("(BLOCK "))
-    for (stmt in block.statements) append(stmt.visit(this@AstVisitor))
+    for (stmt in block.statements) append(stmt.visit(this@Ast))
     append(")")
   }
 
@@ -69,7 +69,20 @@ class AstVisitor : Expr.Visitor, Stmt.Visitor {
         append(")")
     }
     append(")")
-    for (stmt in fn.body) stmt.visit(this@AstVisitor)
+    for (stmt in fn.body) stmt.visit(this@Ast)
     append(")")
+  }
+
+  override fun visitIfStmt(ifStmt: If) = buildString {
+    append("(IF -> ${ifStmt.condition.visit(this@Ast)} -> (")
+    for (stmt in ifStmt.then)
+      stmt.visit(this@Ast)
+    append(")")
+    if (ifStmt.elseBranch != null) {
+      append("ELSE (")
+      for (stmt in ifStmt.elseBranch)
+        stmt.visit(this@Ast)
+      append(")")
+    }
   }
 }

@@ -84,14 +84,12 @@ class Interpreter(private var environment: Environment = Environment()) :
       throw RuntimeError("expr is not callable")
     }
     val arguments = mutableListOf<Any?>()
-    for (argument in expr.arguments)
-      arguments += eval(argument)
+    for (argument in expr.arguments) arguments += eval(argument)
     return callee.call(this, arguments)
   }
 
   private fun assertNumbers(left: Any?, right: Any?) {
-    if (left !is Double || right !is Double)
-      throw RuntimeError("Expect number")
+    if (left !is Double || right !is Double) throw RuntimeError("Expect number")
   }
 
   private fun isTruthy(obj: Any?) =
@@ -132,6 +130,13 @@ class Interpreter(private var environment: Environment = Environment()) :
   override fun visitFnStmt(fn: Fn) {
     val function = Function(fn, environment)
     environment.define(fn.name.text, function)
+  }
+
+  override fun visitIfStmt(ifStmt: If) {
+    val condition = eval(ifStmt.condition)
+    if (isTruthy(condition)) {
+      executeBlockStmt(ifStmt.then, environment)
+    } else if (ifStmt.elseBranch != null) executeBlockStmt(ifStmt.elseBranch, environment)
   }
 }
 

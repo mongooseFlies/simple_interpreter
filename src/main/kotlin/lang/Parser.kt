@@ -28,8 +28,21 @@ class Parser(
     return when {
       match(LET) -> varDeclaration()
       match(FN) -> function()
+      match(IF) -> ifStmt()
       else -> statement()
     }
+  }
+
+  private fun ifStmt(): Stmt {
+    val condition = expression()
+    var elseBranch: List<Stmt>? = null
+    consume("expect '{' after condition", LEFT_BRACE)
+    val thenBranch = block()
+    if (match(ELSE)) {
+      consume("expect '{' after condition", LEFT_BRACE)
+      elseBranch = block()
+    }
+    return If(condition, thenBranch, elseBranch)
   }
 
   private fun function(): Stmt {

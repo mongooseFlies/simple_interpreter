@@ -41,8 +41,14 @@ add(3, 4)
 print "HI"
 print 3 * 4
 
- //TODO: if statement
- //TODO: while statement
+if 1 != 1  {
+  print 1
+} else {
+  print "Dummy"
+}
+
+//TODO: if statement
+//TODO: while statement
 ```
 
 ### Supported Language Features
