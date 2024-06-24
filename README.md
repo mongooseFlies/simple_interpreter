@@ -85,7 +85,7 @@ for ;j < 10; {
 
 ## TODO list
 
-* [ ] Control flow
+* [x] Control flow
 * [x] Functions with parameters
 * [ ] Closures
 * [ ] Classes
