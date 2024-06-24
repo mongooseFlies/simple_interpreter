@@ -13,6 +13,8 @@ interface Expr {
         fun visitVarExpr(expr: Var): Any?
 
         fun visitCallExpr(expr: Call): Any?
+
+        fun visitAssignStmt(expr: Assign): Any?
     }
 
     fun visit(visitor: Visitor): Any?
@@ -49,6 +51,15 @@ data class Var(
     val token: Token,
 ) : Expr {
     override fun visit(visitor: Expr.Visitor) = visitor.visitVarExpr(this)
+}
+
+data class Assign(
+    val name: String,
+    val value: Expr
+) : Expr {
+    override fun visit(visitor: Expr.Visitor) =
+        visitor.visitAssignStmt(this)
+
 }
 
 data class Call(

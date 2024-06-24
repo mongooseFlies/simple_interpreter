@@ -15,7 +15,6 @@ data class Lexer(private val source: String) {
           "if" to IF,
           "else" to ELSE,
           "for" to FOR,
-          "while" to WHILE,
           "true" to TRUE,
           "false" to FALSE,
           "let" to LET,
@@ -41,11 +40,7 @@ data class Lexer(private val source: String) {
       '}' -> addToken(RIGHT_BRACE)
       '+' -> addToken(PLUS)
       '-' -> addToken(MINUS)
-      '/' ->
-        if (match('/'))
-          while (!isAtEnd() && peek() != '\n')
-            advance()
-        else addToken(SLASH)
+      '/' -> if (match('/')) while (!isAtEnd() && peek() != '\n') advance() else addToken(SLASH)
       '*' -> addToken(ASTERISK)
       '"' -> string()
       '<' -> {
@@ -65,8 +60,9 @@ data class Lexer(private val source: String) {
         addToken(type)
       }
       ',' -> addToken(COMMA)
-      '\n', '\r', ';' -> {
-//        if (tokens.isNotEmpty() && tokens[currentInd - 1].type != LINE)
+      ';' -> addToken(SEMICOLON)
+      '\n', '\r' -> {
+        //        if (tokens.isNotEmpty() && tokens[currentInd - 1].type != LINE)
         addToken(LINE)
         line++
       }
@@ -131,7 +127,6 @@ data class Lexer(private val source: String) {
   private fun number() {
     while (isDigit(peek())) advance()
     // NOTE: handle double values
-    // TODO: Introduce int and double instead of number
     if (match('.')) while (isDigit(peek())) advance()
     val value = source.slice(startInd ..< currentInd)
     addToken(NUMBER, value)

@@ -13,6 +13,8 @@ interface Stmt {
         fun visitFnStmt(fn: Fn): Any?
 
         fun visitIfStmt(ifStmt: If): Any?
+
+        fun visitForStmt(forStmt: For): Any?
     }
 
     fun visit(visitor: Visitor): Any?
@@ -57,4 +59,13 @@ data class If(
     val elseBranch: List<Stmt>?,
 ) : Stmt {
     override fun visit(visitor: Stmt.Visitor) = visitor.visitIfStmt(this)
+}
+
+data class For(
+    val initializer: Expr?,
+    val condition: Expr,
+    val increment: Expr?,
+    val body: List<Stmt>
+) : Stmt {
+    override fun visit(visitor: Stmt.Visitor) = visitor.visitForStmt(this)
 }

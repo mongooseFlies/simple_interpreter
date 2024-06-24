@@ -12,7 +12,6 @@ fun main(args: Array<String>) {
     when (args.size) {
         0 -> repl()
         else -> source(args[0])
-        // TODO: add help ?
     }
 }
 

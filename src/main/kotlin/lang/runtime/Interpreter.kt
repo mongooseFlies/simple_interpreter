@@ -13,6 +13,7 @@ class Interpreter(private var environment: Environment = Environment()) :
   override fun visitBinaryExpr(binary: Binary): Any {
     val left = eval(binary.left)
     val right = eval(binary.right)
+
     val operator = binary.operator
     return when (operator) {
       ASTERISK -> {
@@ -31,7 +32,8 @@ class Interpreter(private var environment: Environment = Environment()) :
           when {
             left is Double && right is Double -> left + right
             left is String && right is String -> "$left$right"
-            else -> error("can add only strings or numbers")
+            left is String -> "$left$right"
+            else -> RuntimeError("can add only strings or numbers")
           }
       GTE -> {
         assertNumbers(left, right)
@@ -66,7 +68,7 @@ class Interpreter(private var environment: Environment = Environment()) :
       BANG -> isTruthy(expression)
       MINUS -> {
         if (expression is Double) return -1 * expression
-        else error("Expect a number after ${unary.operator.type}")
+        else throw RuntimeError("Expect a number after ${unary.operator.type}")
       }
       else -> {}
     }
@@ -86,6 +88,11 @@ class Interpreter(private var environment: Environment = Environment()) :
     val arguments = mutableListOf<Any?>()
     for (argument in expr.arguments) arguments += eval(argument)
     return callee.call(this, arguments)
+  }
+
+  override fun visitAssignStmt(expr: Assign) {
+    environment.get(expr.name)
+    environment.define(expr.name, eval(expr.value))
   }
 
   private fun assertNumbers(left: Any?, right: Any?) {
@@ -137,6 +144,21 @@ class Interpreter(private var environment: Environment = Environment()) :
     if (isTruthy(condition)) {
       executeBlockStmt(ifStmt.then, environment)
     } else if (ifStmt.elseBranch != null) executeBlockStmt(ifStmt.elseBranch, environment)
+  }
+
+  override fun visitForStmt(forStmt: For) {
+     if (forStmt.initializer != null) {
+       if (forStmt.initializer !is Assign) {
+          throw RuntimeError("invalid assign stmt in for-loop")
+       }
+       val initializer = forStmt.initializer
+       environment.define(initializer.name, eval(initializer.value))
+     }
+
+    while (isTruthy(eval(forStmt.condition))) {
+      executeBlockStmt(forStmt.body, environment)
+      forStmt.increment?.let { eval(it) }
+    }
   }
 }
 

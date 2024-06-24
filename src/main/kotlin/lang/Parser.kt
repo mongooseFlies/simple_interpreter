@@ -1,10 +1,10 @@
 package lang
 
+import error as err
 import kotlin.collections.mutableListOf
 import lang.Utils.ifTrue
 import lang.model.*
 import lang.model.TokenType.*
-import error as err
 
 class Parser(
     private val tokens: List<Token>,
@@ -14,7 +14,7 @@ class Parser(
 
   fun parse() = statements()
 
-  private fun statements() : List<Stmt> {
+  private fun statements(): List<Stmt> {
     val statements = mutableListOf<Stmt>()
     while (!isAtEnd()) {
       skipNewLines()
@@ -28,7 +28,6 @@ class Parser(
     return when {
       match(LET) -> varDeclaration()
       match(FN) -> function()
-      match(IF) -> ifStmt()
       else -> statement()
     }
   }
@@ -73,6 +72,8 @@ class Parser(
 
   private fun statement(): Stmt =
       when {
+        match(IF) -> ifStmt()
+        match(FOR) -> forStmt()
         match(PRINT) -> {
           val expression = expression()
           val printStmt = Print(expression)
@@ -83,17 +84,55 @@ class Parser(
         else -> Expression(expression())
       }
 
+  private fun forStmt(): Stmt {
+    // initializer -> ; -> conditions -> ; -> increment -> {
+    var initializer: Expr? = null
+
+    if (!check(SEMICOLON)) {
+      initializer = expression()
+    }
+    expect("expect ';' after for initializer", SEMICOLON)
+
+    val condition = expression()
+    expect("expect ';' after for condition", SEMICOLON)
+
+    var increment: Expr? = null
+    if (!check(LEFT_BRACE)) {
+      increment = expression()
+    }
+
+    expect("expect '{' after for", LEFT_BRACE)
+    val body = block()
+
+    return For(initializer, condition, increment, body)
+  }
+
   private fun block(): List<Stmt> {
     val statements = mutableListOf<Stmt>()
-    while (!check(RIGHT_BRACE)) {
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
       skipNewLines()
+      if (check(RIGHT_BRACE)) break
       statements += declaration()
     }
     expect("Expect '}'", RIGHT_BRACE)
     return statements
   }
 
-  private fun expression() = equality()
+  private fun expression() = assignment()
+
+  private fun assignment(): Expr {
+    val expr = equality()
+    if (match(EQ)) {
+      val eq = previous()
+      val right = expression()
+      if (expr is Var) {
+        return Assign(expr.token.text, right)
+      } else {
+        error("invalid assignment type", eq)
+      }
+    }
+    return expr
+  }
 
   private fun equality(): Expr {
     var expr = comparison()
@@ -146,11 +185,11 @@ class Parser(
     var expr = primary()
     if (match(LEFT_PAREN)) {
       val arguments = mutableListOf<Expr>()
-        do {
-          if (!check(RIGHT_PAREN)) {
-            arguments += expression()
-          }
-        } while (match(COMMA))
+      do {
+        if (!check(RIGHT_PAREN)) {
+          arguments += expression()
+        }
+      } while (match(COMMA))
       expect("Expect ')' after arguments", RIGHT_PAREN)
       expr = Call(expr, arguments)
     }
@@ -159,7 +198,7 @@ class Parser(
 
   private fun primary(): Expr =
       when {
-        match(STRING) -> Literal(previous().text)
+        match(STRING) -> Literal(previous().value)
         match(NUMBER) -> Literal(previous().text.toDouble())
         match(NIL) -> Literal(null)
         match(LEFT_PAREN) -> {
@@ -168,7 +207,6 @@ class Parser(
           Grouping(expr)
         }
         match(IDENTIFIER) -> Var(previous())
-        // TODO: Throw proper error with line number info
         else -> throw error("Compile error ...", tokens[currentInd])
       }
 
@@ -191,8 +229,7 @@ class Parser(
 
   private fun peek() = tokens[currentInd]
 
-  private fun match(vararg types: TokenType): Boolean =
-    types.any { check(it) }.ifTrue { advance() }
+  private fun match(vararg types: TokenType): Boolean = types.any { check(it) }.ifTrue { advance() }
 
   private fun check(type: TokenType) = peek().type == type
 

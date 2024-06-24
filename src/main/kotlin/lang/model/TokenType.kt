@@ -25,6 +25,7 @@ enum class TokenType {
     // Punctuation
     DOT,
     COMMA,
+    SEMICOLON,
     BANG,
 
     // Primary types
@@ -43,7 +44,6 @@ enum class TokenType {
     NIL,
     PRINT,
     LET,
-    WHILE,
     EOF,
     LINE,
 }

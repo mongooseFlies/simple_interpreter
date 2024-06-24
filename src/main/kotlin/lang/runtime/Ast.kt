@@ -41,6 +41,11 @@ class Ast : Expr.Visitor, Stmt.Visitor {
     append(")")
   }
 
+  override fun visitAssignStmt(expr: Assign) = buildString {
+    append("(ASSIGN (${expr.name} -> ${expr.value.visit(this@Ast)} )")
+  }
+
+
   override fun visitExpressionStmt(stmt: Expression) {
     stmt.expr.visit(this)
   }
@@ -77,12 +82,17 @@ class Ast : Expr.Visitor, Stmt.Visitor {
     append("(IF -> ${ifStmt.condition.visit(this@Ast)} -> (")
     for (stmt in ifStmt.then)
       stmt.visit(this@Ast)
-    append(")")
+    append(") ")
     if (ifStmt.elseBranch != null) {
       append("ELSE (")
       for (stmt in ifStmt.elseBranch)
         stmt.visit(this@Ast)
       append(")")
     }
+  }
+
+  override fun visitForStmt(forStmt: For) = buildString {
+    //TODO -> other fields
+    append("(FOR -> ${forStmt.condition.visit(this@Ast)})")
   }
 }
