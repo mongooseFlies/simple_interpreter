@@ -25,7 +25,6 @@ Very small dynamically-typed programming language
 ### **Example:**
 see demo file [here](demo.txt)
 
-```
 ## TODO list
 
 * [x] Control flow
