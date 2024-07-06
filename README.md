@@ -2,6 +2,9 @@
 
 Very small dynamically-typed programming language 
 
+> [!WARNING]
+> Personal Project - Not ready for production
+
 ### Features
 
 * Dynamic Typing: Variables do not require explicit type declaration.
@@ -13,15 +16,6 @@ Very small dynamically-typed programming language
 1. **Prerequisites:** 
 
     * Kotlin ([https://kotlinlang.org/](https://kotlinlang.org/))
-    * Go ([https://go.dev/](https://go.dev/)) 
-
-2. **Running the Interpreter:**
-
-    * Execute the script:
-      ```bash
-      $ kotlinc ...
-      ```
-    * This will launch the interactive shell where you can try out
 
 ### Usage
 
@@ -29,47 +23,7 @@ Very small dynamically-typed programming language
 * Run an entire source file
 
 ### **Example:**
-see demo file [here](src/test/kotlin/test.s)
-```
-// Variable declaration
-let a = 22
-
-// Function declaration
-fn add(a, b) {
-  print a + b
-}
-
-// First class function
-let addFunc = add
-
-// Function call
-addFunc(4, 5)
-
-add(3, 4)
-
-print "HI"
-print 3 * 4
-
-if 1 != 1  {
-  print 1
-} else {
-  print "Dummy"
-}
-
-let sum = 0
-
-for i = 1; i < 3; i = i + 1 {
-  sum = sum + i
-}
-
-print sum
-
-//NOTE: Go-like while loop
-let j = 1
-for ;j < 10; {
-  print "j = " + j
-  j = j + 1
-}
+see demo file [here](demo.txt)
 
 ```
 ## TODO list
