@@ -21,6 +21,7 @@ data class Lexer(private val source: String) {
           "nil" to NIL,
           "print" to PRINT,
           "fn" to FN,
+          "return" to RETURN,
       )
 
   fun tokens(): List<Token> {

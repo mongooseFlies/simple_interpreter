@@ -46,4 +46,5 @@ enum class TokenType {
     LET,
     EOF,
     LINE,
+    RETURN,
 }

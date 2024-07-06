@@ -29,6 +29,7 @@ Very small dynamically-typed programming language
 * Run an entire source file
 
 ### **Example:**
+see demo file [here](src/test/kotlin/test.s)
 ```
 // Variable declaration
 let a = 22
@@ -55,9 +56,6 @@ if 1 != 1  {
   print "Dummy"
 }
 
-//TODO: if statement
-//TODO: while statement
-
 let sum = 0
 
 for i = 1; i < 3; i = i + 1 {
@@ -66,28 +64,19 @@ for i = 1; i < 3; i = i + 1 {
 
 print sum
 
-let j = 1
-
 //NOTE: Go-like while loop
-// bake while loop into for-statment
+let j = 1
 for ;j < 10; {
   print "j = " + j
   j = j + 1
 }
+
 ```
-
-### Supported Language Features
-* 
-* 
-*
-* 
-
-
 ## TODO list
 
 * [x] Control flow
 * [x] Functions with parameters
-* [ ] Closures
+* [x] Closures
 * [ ] Classes
 * [ ] Methods
 * [ ] Inheritance
@@ -112,5 +101,3 @@ for ;j < 10; {
     factor     => primary
     primary    => STRING | NUMBER | 'false' | 'true' | grouping
     grouping     => '(' expression ')'
-
-    

@@ -15,6 +15,8 @@ interface Stmt {
         fun visitIfStmt(ifStmt: If): Any?
 
         fun visitForStmt(forStmt: For): Any?
+
+        fun visitReturnStmt(returnStmt: ReturnStmt): Any?
     }
 
     fun visit(visitor: Visitor): Any?
@@ -68,4 +70,11 @@ data class For(
     val body: List<Stmt>
 ) : Stmt {
     override fun visit(visitor: Stmt.Visitor) = visitor.visitForStmt(this)
+}
+
+data class ReturnStmt(
+    val keyword: Token,
+    val value: Expr?
+) : Stmt {
+    override fun visit(visitor: Stmt.Visitor) = visitor.visitReturnStmt(this)
 }

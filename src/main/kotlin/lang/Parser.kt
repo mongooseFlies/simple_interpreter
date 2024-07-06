@@ -15,20 +15,25 @@ class Parser(
   fun parse() = statements()
 
   private fun statements(): List<Stmt> {
-    val statements = mutableListOf<Stmt>()
+    val statements = mutableListOf<Stmt?>()
     while (!isAtEnd()) {
       skipNewLines()
       if (isAtEnd()) break
       statements += declaration()
     }
-    return statements
+    return statements.filterNotNull()
   }
 
-  private fun declaration(): Stmt {
-    return when {
-      match(LET) -> varDeclaration()
-      match(FN) -> function()
-      else -> statement()
+  private fun declaration(): Stmt? {
+    try {
+      return when {
+        match(LET) -> varDeclaration()
+        match(FN) -> function()
+        else -> statement()
+      }
+    } catch (_: ParseException) {
+      synchronize()
+      return null
     }
   }
 
@@ -81,8 +86,19 @@ class Parser(
           printStmt
         }
         match(LEFT_BRACE) -> Block(block())
+        match(RETURN) -> returnStmt()
         else -> Expression(expression())
       }
+
+  private fun returnStmt(): Stmt {
+    val keyword = previous()
+    var value: Expr? = null
+    if (!check(LINE)) {
+      value = expression()
+    }
+    consume("Expect LF after return", LINE)
+    return ReturnStmt(keyword, value)
+  }
 
   private fun forStmt(): Stmt {
     // initializer -> ; -> conditions -> ; -> increment -> {
@@ -93,7 +109,12 @@ class Parser(
     }
     expect("expect ';' after for initializer", SEMICOLON)
 
-    val condition = expression()
+    val condition: Expr = if (!check(SEMICOLON)) {
+      expression()
+    } else {
+      Literal(true)
+    }
+
     expect("expect ';' after for condition", SEMICOLON)
 
     var increment: Expr? = null
@@ -108,14 +129,14 @@ class Parser(
   }
 
   private fun block(): List<Stmt> {
-    val statements = mutableListOf<Stmt>()
+    val statements = mutableListOf<Stmt?>()
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       skipNewLines()
       if (check(RIGHT_BRACE)) break
       statements += declaration()
     }
     expect("Expect '}'", RIGHT_BRACE)
-    return statements
+    return statements.filterNotNull()
   }
 
   private fun expression() = assignment()
@@ -124,7 +145,7 @@ class Parser(
     val expr = equality()
     if (match(EQ)) {
       val eq = previous()
-      val right = expression()
+      val right = assignment()
       if (expr is Var) {
         return Assign(expr.token.text, right)
       } else {
@@ -241,6 +262,18 @@ class Parser(
 
   private fun skipNewLines() {
     while (check(LINE)) advance()
+  }
+
+  private fun synchronize() {
+    advance()
+    while (!isAtEnd()) {
+      if (previous().type == LINE) return
+      when(peek().type) {
+        FN, LET, IF, FOR, PRINT, RETURN -> return
+        else -> {}
+      }
+      advance()
+    }
   }
 }
 

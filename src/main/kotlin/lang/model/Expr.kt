@@ -14,7 +14,7 @@ interface Expr {
 
         fun visitCallExpr(expr: Call): Any?
 
-        fun visitAssignStmt(expr: Assign): Any?
+        fun visitAssignExpr(expr: Assign): Any?
     }
 
     fun visit(visitor: Visitor): Any?
@@ -58,7 +58,7 @@ data class Assign(
     val value: Expr
 ) : Expr {
     override fun visit(visitor: Expr.Visitor) =
-        visitor.visitAssignStmt(this)
+        visitor.visitAssignExpr(this)
 
 }
 

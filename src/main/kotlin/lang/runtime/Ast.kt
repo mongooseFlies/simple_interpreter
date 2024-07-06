@@ -41,7 +41,7 @@ class Ast : Expr.Visitor, Stmt.Visitor {
     append(")")
   }
 
-  override fun visitAssignStmt(expr: Assign) = buildString {
+  override fun visitAssignExpr(expr: Assign) = buildString {
     append("(ASSIGN (${expr.name} -> ${expr.value.visit(this@Ast)} )")
   }
 
@@ -92,7 +92,12 @@ class Ast : Expr.Visitor, Stmt.Visitor {
   }
 
   override fun visitForStmt(forStmt: For) = buildString {
-    //TODO -> other fields
     append("(FOR -> ${forStmt.condition.visit(this@Ast)})")
+  }
+
+  override fun visitReturnStmt(returnStmt: ReturnStmt) = buildString {
+    append("(RETURN ")
+    returnStmt.value?.let { append(it.visit(this@Ast)) }
+    append(")")
   }
 }

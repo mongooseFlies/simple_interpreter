@@ -2,11 +2,19 @@ package lang.runtime
 
 import lang.model.*
 import lang.model.TokenType.*
+import runtimeErr
 
-class Interpreter(private var environment: Environment = Environment()) :
-    Expr.Visitor, Stmt.Visitor {
+class Interpreter(
+    private val globals: Environment = Environment(),
+    private var environment: Environment = globals,
+    private val locals: MutableMap<Expr, Int> = mutableMapOf()
+) : Expr.Visitor, Stmt.Visitor {
 
-  fun interpret(statements: List<Stmt>) = statements.forEach { it.visit(this) }
+  fun interpret(statements: List<Stmt>) = try {
+    statements.forEach { it.visit(this) }
+  } catch (err: RuntimeError) {
+    runtimeErr(err)
+  }
 
   private fun eval(expr: Expr) = expr.visit(this)
 
@@ -78,7 +86,14 @@ class Interpreter(private var environment: Environment = Environment()) :
 
   override fun visitLiteralExpr(literal: Literal): Any? = literal.value
 
-  override fun visitVarExpr(expr: Var) = environment.get(expr.token.text)
+  override fun visitVarExpr(expr: Var) = lookUpVar(expr.token, expr)
+
+  private fun lookUpVar(token: Token, expr: Expr): Any? {
+    val depth = locals[expr]
+    return depth?.let {
+      environment.getAt(depth, token.text)
+    } ?: globals.get(token.text)
+  }
 
   override fun visitCallExpr(expr: Call): Any? {
     val callee = eval(expr.callee)
@@ -90,9 +105,13 @@ class Interpreter(private var environment: Environment = Environment()) :
     return callee.call(this, arguments)
   }
 
-  override fun visitAssignStmt(expr: Assign) {
-    environment.get(expr.name)
-    environment.define(expr.name, eval(expr.value))
+  override fun visitAssignExpr(expr: Assign): Any? {
+    val value = eval(expr.value)
+    val depth = locals[expr]
+    depth?.let {
+      environment.assignAt(depth, expr.name, value)
+    } ?: globals.assign(expr.name, value)
+    return value
   }
 
   private fun assertNumbers(left: Any?, right: Any?) {
@@ -103,13 +122,17 @@ class Interpreter(private var environment: Environment = Environment()) :
       when (obj) {
         is Boolean -> obj
         null -> false
-        // NOTE: anything else is true if not null
         else -> true
       }
 
   override fun visitExpressionStmt(stmt: Expression) = eval(stmt.expr)
 
-  override fun visitPrintStmt(stmt: Print) = println(eval(stmt.expr))
+  override fun visitPrintStmt(stmt: Print) {
+    when(val expr = eval(stmt.expr)) {
+      null -> println("nil")
+      else -> println(expr)
+    }
+  }
 
   override fun visitVarStmt(stmt: Variable) {
     var initializer: Any? = null
@@ -120,16 +143,15 @@ class Interpreter(private var environment: Environment = Environment()) :
   }
 
   override fun visitBlockStmt(block: Block) {
-    executeBlockStmt(block.statements, environment)
+    executeBlock(block.statements, Environment(enclosing = environment))
   }
 
-  fun executeBlockStmt(body: List<Stmt>, environment: Environment) {
-    // NOTE: take env snapshot
+  fun executeBlock(body: List<Stmt>, environment: Environment) {
     val previous = this.environment
+    this.environment = environment
     try {
       for (stmt in body) stmt.visit(this)
     } finally {
-      // NOTE: restore env after function call exits
       this.environment = previous
     }
   }
@@ -142,24 +164,36 @@ class Interpreter(private var environment: Environment = Environment()) :
   override fun visitIfStmt(ifStmt: If) {
     val condition = eval(ifStmt.condition)
     if (isTruthy(condition)) {
-      executeBlockStmt(ifStmt.then, environment)
-    } else if (ifStmt.elseBranch != null) executeBlockStmt(ifStmt.elseBranch, environment)
+      executeBlock(ifStmt.then, environment)
+    } else if (ifStmt.elseBranch != null) executeBlock(ifStmt.elseBranch, environment)
   }
 
   override fun visitForStmt(forStmt: For) {
-     if (forStmt.initializer != null) {
-       if (forStmt.initializer !is Assign) {
-          throw RuntimeError("invalid assign stmt in for-loop")
-       }
-       val initializer = forStmt.initializer
-       environment.define(initializer.name, eval(initializer.value))
-     }
+    if (forStmt.initializer != null) {
+      if (forStmt.initializer !is Assign) {
+        throw RuntimeError("invalid assign stmt in for-loop")
+      }
+      val initializer = forStmt.initializer
+      environment.define(initializer.name, eval(initializer.value))
+    }
 
     while (isTruthy(eval(forStmt.condition))) {
-      executeBlockStmt(forStmt.body, environment)
+      executeBlock(forStmt.body, environment)
       forStmt.increment?.let { eval(it) }
     }
   }
+
+  override fun visitReturnStmt(returnStmt: ReturnStmt): Any? {
+    val value = returnStmt.value?.let {
+      eval(it)
+    }
+    throw Return(value)
+  }
+
+  fun resolve(expr: Expr, depth: Int) {
+    locals[expr] = depth
+  }
 }
 
-data class RuntimeError(override val message: String) : RuntimeException(message)
+data class RuntimeError(override val message: String, val token: Token? = null) : RuntimeException(message)
+data class Return(val value: Any?): RuntimeException(null, null, false, false)
