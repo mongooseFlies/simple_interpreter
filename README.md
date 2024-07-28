@@ -1,6 +1,6 @@
 ## Dynamic Programming Language 
 
-Very small dynamically-typed programming language 
+tiny dynamically-typed programming language 
 
 > [!WARNING]
 > Personal Project - Not ready for production
@@ -30,8 +30,8 @@ see demo file [here](demo.txt)
 * [x] Control flow
 * [x] Functions with parameters
 * [x] Closures
-* [ ] Classes
-* [ ] Methods
+* [x] Classes
+* [x] Methods
 * [ ] Inheritance
 
 ## Grammar
@@ -47,10 +47,12 @@ see demo file [here](demo.txt)
     grouping  -> '('  expression ')'
     operator  -> '==' | '>=' | '<' | '<=' | '+' | '-' | '*' | '/' | '!=' |
 
-    expression => equality
+    expression => or
+    or         => and
+    and        => equality
     equality   => comparison ('==' | '!=') comparison
     comparison => term ('+' | '-') term
     term       => factor ('*' | '/') factor
     factor     => primary
-    primary    => STRING | NUMBER | 'false' | 'true' | grouping
+    primary    => STRING | NUMBER | 'false' | 'true' | nil | grouping
     grouping     => '(' expression ')'
